@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading...</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f9f9f9;
+    }
+
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 9px solid;
+      border-color: #dbdcef;
+      border-right-color: #474bff;
+      animation: spinner-d3wgkg 1s infinite linear;
+    }
+
+    @keyframes spinner-d3wgkg {
+      to {
+        transform: rotate(1turn);
+      }
+    }
+  </style>
+  <script>
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      window.location.href = "https://google.com";
+    }, 3000);
+  </script>
+</head>
+
+<body>
+  <div class="spinner"></div>
+</body>
+
+</html>
